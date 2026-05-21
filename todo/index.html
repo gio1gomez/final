@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Telemetría + Cámara IA</title>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 10px;
+            overflow-x: hidden;
+        }
+
+        h1 {
+            text-align: center;
+            color: #ffffff;
+            margin: 8px 0 8px 0;
+            /* tamaño del titulo principal */
+            font-size: 36px;
+        }
+
+        #status {
+            width: fit-content;
+            margin: 0 auto 16px auto;
+            padding: 5px 16px;
+            border-radius: 20px;
+            background: #222;
+            color: #ff4444;
+            font-size: 14px;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 0.95fr 1.05fr;
+            gap: 34px;
+            width: 90vw;
+            max-width: 1680px;
+            margin: 0 auto;
+            align-items: start;
+        }
+
+        .panel {
+            background: #151515;
+            border: 1px solid #2b2b2b;
+            border-radius: 14px;
+            padding: 18px;
+        }
+
+        .section-title {
+            width: 100%;
+            margin-top: 14px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 5px;
+            color: #aaa;
+            font-size: 15px;
+        }
+
+        .section-title:first-child {
+            margin-top: 0;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .card {
+            background: #1e1e1e;
+            border: 1px solid #333;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            min-height: 88px;
+        }
+
+        .label {
+            font-size: 0.75em;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        .val {
+            font-size: 1.65em;
+            font-weight: bold;
+            color: #00ff00;
+            margin: 6px 0;
+        }
+
+        .unit {
+            font-size: 0.82em;
+            color: #666;
+        }
+
+        .alarms {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 16px;
+            background: #1a1a1a;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px dashed #444;
+        }
+
+        .led-box {
+            text-align: center;
+            width: auto;
+        }
+
+        .led {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #333;
+            margin: 8px auto;
+            transition: 0.3s;
+            border: 2px solid #000;
+        }
+
+        .led-red.active {
+            background: #ff0000;
+            box-shadow: 0 0 15px #ff0000;
+        }
+
+        .led-blue.active {
+            background: #0088ff;
+            box-shadow: 0 0 15px #0088ff;
+        }
+
+        .led-orange.active {
+            background: #ffaa00;
+            box-shadow: 0 0 15px #ffaa00;
+        }
+
+        .alert-msg {
+            font-size: 0.68em;
+            font-weight: bold;
+            min-height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .camera-box {
+            background: #1e1e1e;
+            border: 1px solid #333;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        #camera-view {
+            width: 100%;
+            /* El max-height controla el alto máximo de la cámara */
+            max-height: 460px; 
+            object-fit: contain;
+            background: #000;
+            border-radius: 10px;
+            border: 1px solid #333;
+        }
+
+        #model-result {
+            color: #00d4ff;
+            font-size: 1.55em;
+        }
+
+        @media (max-width: 1000px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+                width: 96vw;
+            }
+
+            #camera-view {
+                max-height: 320px;
+            }
+        }
+
+        @media (max-width: 650px) {
+            .alarms {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            h1 {
+                font-size: 23px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Panel de Telemetría + Cámara IA</h1>
+    <div id="status">🔴 Desconectado</div>
+
+    <div class="main-layout">
+
+        <!-- IZQUIERDA: TELEMETRÍA -->
+        <div class="panel">
+            <div class="section-title">Sensores Ambientales</div>
+
+            <div class="grid">
+                <div class="card">
+                    <div class="label">Temperatura</div>
+                    <div id="temp" class="val">--</div>
+                    <div class="unit">°C</div>
+                </div>
+
+                <div class="card">
+                    <div class="label">Humedad</div>
+                    <div id="hum" class="val">--</div>
+                    <div class="unit">%</div>
+                </div>
+            </div>
+
+            <div class="section-title">Acelerómetro (g) y Orientación</div>
+
+            <div class="grid">
+                <div class="card">
+                    <div class="label">Eje X</div>
+                    <div id="ax" class="val">--</div>
+                </div>
+
+                <div class="card">
+                    <div class="label">Eje Y</div>
+                    <div id="ay" class="val">--</div>
+                </div>
+
+                <div class="card">
+                    <div class="label">Eje Z</div>
+                    <div id="az" class="val">--</div>
+                </div>
+
+                <div class="card">
+                    <div class="label">Ángulo Frontal</div>
+                    <div id="ang-frontal" class="val" style="color: #00d4ff;">--</div>
+                    <div class="unit">grados (°)</div>
+                </div>
+            </div>
+
+            <div class="section-title">Giroscopio (°/s)</div>
+
+            <div class="grid">
+                <div class="card">
+                    <div class="label">Giro X</div>
+                    <div id="gx" class="val">--</div>
+                </div>
+
+                <div class="card">
+                    <div class="label">Giro Y</div>
+                    <div id="gy" class="val">--</div>
+                </div>
+
+                <div class="card">
+                    <div class="label">Giro Z</div>
+                    <div id="gz" class="val">--</div>
+                </div>
+            </div>
+
+            <div class="alarms">
+                <div class="led-box">
+                    <div class="label">Alerta Temp</div>
+                    <div id="led-temp" class="led led-red"></div>
+                    <div id="msg-temp" class="alert-msg"></div>
+                </div>
+
+                <div class="led-box">
+                    <div class="label">Alerta Hum</div>
+                    <div id="led-hum" class="led led-blue"></div>
+                    <div id="msg-hum" class="alert-msg"></div>
+                </div>
+
+                <div class="led-box">
+                    <div class="label">Alerta Giro</div>
+                    <div id="led-giro" class="led led-orange"></div>
+                    <div id="msg-giro" class="alert-msg"></div>
+                </div>
+
+                <div class="led-box">
+                    <div class="label">Alerta Despegue</div>
+                    <div id="led-despegue" class="led led-red"></div>
+                    <div id="msg-despegue" class="alert-msg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DERECHA: CÁMARA + MODELO -->
+        <div class="panel">
+            <div class="section-title">Cámara con Modelo IA</div>
+
+            <div class="camera-box">
+                <img id="camera-view" alt="Vista de cámara">
+
+                <div class="label" style="margin-top: 12px;">Resultado del modelo</div>
+                <div id="model-result" class="val">--</div>
+                <div id="model-confidence" class="unit">Confianza: --</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const socket = new WebSocket('ws://172.31.76.66:8767');
+        socket.onopen = () => {
+            document.getElementById('status').innerText = "🟢 Conectado a server.py";
+            document.getElementById('status').style.color = "#00ff00";
+        };
+
+        socket.onclose = () => {
+            document.getElementById('status').innerText = "🔴 Desconectado";
+            document.getElementById('status').style.color = "#ff4444";
+        };
+
+        socket.onerror = () => {
+            document.getElementById('status').innerText = "⚠️ Error WebSocket";
+            document.getElementById('status').style.color = "#ffaa00";
+        };
+
+        socket.onmessage = (event) => {
+            const msg = JSON.parse(event.data);
+
+            if (msg.type === "telemetry") {
+                actualizarTelemetria(msg.data);
+            }
+
+            if (msg.type === "frame") {
+                actualizarCamara(msg);
+            }
+        };
+
+        function actualizarTelemetria(csvData) {
+            const d = csvData.split(',');
+
+            if (d.length !== 8) {
+                return;
+            }
+
+            const tVal = parseFloat(d[0]);
+            const hVal = parseFloat(d[1]);
+            const axVal = parseFloat(d[2]);
+            const ayVal = parseFloat(d[3]);
+            const azVal = parseFloat(d[4]);
+            const gxVal = parseFloat(d[5]);
+            const gyVal = parseFloat(d[6]);
+            const gzVal = parseFloat(d[7]);
+
+            const anguloFrontal = Math.atan2(
+                -axVal,
+                Math.sqrt(ayVal * ayVal + azVal * azVal)
+            ) * (180 / Math.PI);
+
+            document.getElementById('temp').innerText = d[0];
+            document.getElementById('hum').innerText = d[1];
+            document.getElementById('ax').innerText = d[2];
+            document.getElementById('ay').innerText = d[3];
+            document.getElementById('az').innerText = d[4];
+            document.getElementById('gx').innerText = d[5];
+            document.getElementById('gy').innerText = d[6];
+            document.getElementById('gz').innerText = d[7];
+            document.getElementById('ang-frontal').innerText = anguloFrontal.toFixed(2);
+
+            actualizarAlarmas(tVal, hVal, gxVal, gyVal, gzVal, anguloFrontal);
+        }
+
+        function actualizarCamara(msg) {
+            document.getElementById("camera-view").src =
+                "data:image/jpeg;base64," + msg.image;
+
+            document.getElementById("model-result").innerText =
+                msg.class || "--";
+
+            if (msg.confidence !== undefined) {
+                document.getElementById("model-confidence").innerText =
+                    "Confianza: " + (msg.confidence * 100).toFixed(1) + "%";
+            } else {
+                document.getElementById("model-confidence").innerText =
+                    "Confianza: --";
+            }
+        }
+
+        function actualizarAlarmas(tVal, hVal, gxVal, gyVal, gzVal, anguloFrontal) {
+            if (tVal > 22) {
+                document.getElementById('led-temp').classList.add('active');
+                document.getElementById('msg-temp').innerText = "¡TEMPERATURA CRÍTICA!";
+                document.getElementById('msg-temp').style.color = "#ff4444";
+            } else {
+                document.getElementById('led-temp').classList.remove('active');
+                document.getElementById('msg-temp').innerText = "";
+            }
+
+            if (hVal > 60) {
+                document.getElementById('led-hum').classList.add('active');
+                document.getElementById('msg-hum').innerText = "MUCHA HUMEDAD";
+                document.getElementById('msg-hum').style.color = "#44aaff";
+            } else {
+                document.getElementById('led-hum').classList.remove('active');
+                document.getElementById('msg-hum').innerText = "";
+            }
+
+            if (Math.abs(gxVal) > 100 || Math.abs(gyVal) > 100 || Math.abs(gzVal) > 100) {
+                document.getElementById('led-giro').classList.add('active');
+                document.getElementById('msg-giro').innerText = "¡GIRO CRÍTICO!";
+                document.getElementById('msg-giro').style.color = "#ffaa00";
+            } else {
+                document.getElementById('led-giro').classList.remove('active');
+                document.getElementById('msg-giro').innerText = "";
+            }
+
+            if (anguloFrontal > -75) {
+                document.getElementById('led-despegue').classList.add('active');
+                document.getElementById('msg-despegue').innerText = "ROBOT DESPEGÁNDOSE";
+                document.getElementById('msg-despegue').style.color = "#ff4444";
+            } else {
+                document.getElementById('led-despegue').classList.remove('active');
+                document.getElementById('msg-despegue').innerText = "";
+            }
+        }
+    </script>
+</body>
+
+</html>
