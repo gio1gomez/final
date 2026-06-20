@@ -1,0 +1,66 @@
+GUÍA DE INSTALACIÓN
+Sistema Robótico Ícaro
+
+Esta guía resume los pasos mínimos para preparar el entorno de ejecución del prototipo del sistema robótico Ícaro.
+
+1. REQUISITOS GENERALES
+
+Para ejecutar el sistema se requiere:
+
+- Raspberry Pi Zero 2 W.
+- Raspberry Pi Pico 1.
+- Raspberry Pi Pico 2.
+- Laptop del operador.
+- Cámara CSI conectada a la Raspberry Pi Zero.
+- Modelo de detección ModeloV3.tflite.
+- MongoDB instalado en la laptop.
+- Red local compartida entre la laptop y la Raspberry Pi Zero.
+
+2. ARCHIVOS PRINCIPALES DEL PROYECTO
+
+El repositorio debe contener los siguientes archivos:
+
+- final7.py: programa ejecutado en la Raspberry Pi Zero 2 W.
+- server2.py: servidor principal ejecutado en la laptop.
+- index.html: interfaz web de telemetría.
+- pico1final2.py: programa para la Raspberry Pi Pico 1.
+- pico2final2.py: programa para la Raspberry Pi Pico 2.
+- generar_informe_mision.py: generador de informes PDF.
+- ModeloV3.tflite: modelo de inteligencia artificial para detección de grietas.
+
+3. INSTALACIÓN EN LA LAPTOP
+
+Instalar Python 3 y las librerías necesarias:
+
+pip install websockets opencv-python numpy pymongo reportlab pillow
+
+Verificar que MongoDB esté instalado y activo antes de ejecutar el servidor.
+
+4. INSTALACIÓN EN LA RASPBERRY PI ZERO
+
+Instalar las librerías necesarias:
+
+pip install websockets pyserial opencv-python picamera2
+
+Verificar que la cámara CSI esté conectada y habilitada correctamente.
+
+5. INSTALACIÓN EN LAS RASPBERRY PI PICO
+
+Cargar los archivos correspondientes usando Thonny u otra herramienta compatible con MicroPython:
+
+- En la Pico 1 cargar pico1final2.py.
+- En la Pico 2 cargar pico2final2.py.
+
+6. VERIFICACIÓN INICIAL
+
+Antes de iniciar una prueba, verificar:
+
+- Que la laptop y la Raspberry Pi Zero estén conectadas a la misma red.
+- Que la cámara CSI sea reconocida.
+- Que las placas Raspberry Pi Pico estén alimentadas.
+- Que MongoDB esté activo.
+- Que el archivo ModeloV3.tflite esté en la misma carpeta que server2.py.
+
+7. OBSERVACIÓN
+
+La adherencia vertical del robot se valida mediante simulación. En el prototipo físico se verifica la activación del ESC y su integración con el sistema electrónico.

@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Telemetría + Cámara IA</title>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 10px;
+            overflow-x: hidden;
+        }
+
+        h1 {
+            text-align: center;
+            color: #ffffff;
+            margin: 8px 0 8px 0;
+            font-size: 36px;
+        }
+
+        #status {
+            width: fit-content;
+            margin: 0 auto 12px auto;
+            padding: 5px 16px;
+            border-radius: 20px;
+            background: #222;
+            color: #ff4444;
+            font-size: 14px;
+        }
+
+        #control-status {
+            width: fit-content;
+            margin: 0 auto 12px auto;
+            padding: 5px 16px;
+            border-radius: 20px;
+            background: #222;
+            color: #ffaa00;
+            font-size: 14px;
+        }
+
+        #lane-status {
+            width: fit-content;
+            margin: 0 auto 16px auto;
+            padding: 5px 16px;
+            border-radius: 20px;
+            background: #222;
+            color: #00d4ff;
+            font-size: 14px;
+        }
+
+        .control-panel {
+            width: fit-content;
+            margin: 0 auto 18px auto;
+            background: #151515;
+            border: 1px solid #2b2b2b;
+            border-radius: 14px;
+            padding: 14px 18px;
+            text-align: center;
+        }
+
+        .control-title {
+            color: #aaa;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .mode-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            border: none;
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            border: 1px solid #444;
+            user-select: none;
+        }
+
+        .start-btn {
+            background: #123a1a;
+            color: #00ff66;
+        }
+
+        .pause-btn {
+            background: #3a2a12;
+            color: #ffaa00;
+        }
+
+        .lane-btn {
+            background: #122d3a;
+            color: #00d4ff;
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: 70px 70px 70px;
+            grid-template-rows: 58px 58px 58px;
+            gap: 8px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .control-btn {
+            width: 70px;
+            height: 58px;
+            border: none;
+            border-radius: 12px;
+            background: #252525;
+            color: #00ff00;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            border: 1px solid #444;
+            user-select: none;
+            touch-action: none;
+        }
+
+        .control-btn:active {
+            background: #00aa00;
+            color: #ffffff;
+            transform: scale(0.96);
+        }
+
+        .control-btn.disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .stop-btn {
+            background: #3a1515;
+            color: #ff4444;
+            border-color: #773333;
+        }
+
+        .stop-btn:active {
+            background: #ff0000;
+            color: #ffffff;
+        }
+
+        .empty-cell {
+            width: 70px;
+            height: 58px;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 0.95fr 1.05fr;
+            gap: 34px;
+            width: 90vw;
+            max-width: 1680px;
+            margin: 0 auto;
+            align-items: start;
+        }
+
+        .panel {
+            background: #151515;
+            border: 1px solid #2b2b2b;
+            border-radius: 14px;
+            padding: 18px;
+        }
+
+        .section-title {
+            width: 100%;
+            margin-top: 14px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 5px;
+            color: #aaa;
+            font-size: 15px;
+        }
+
+        .section-title:first-child {
+            margin-top: 0;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .card {
+            background: #1e1e1e;
+            border: 1px solid #333;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            min-height: 88px;
+        }
+
+        .label {
+            font-size: 0.75em;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        .val {
+            font-size: 1.65em;
+            font-weight: bold;
+            color: #00ff00;
+            margin: 6px 0;
+        }
+
+        .unit {
+            font-size: 0.82em;
+            color: #666;
+        }
+
+        .alarms {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 16px;
+            background: #1a1a1a;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px dashed #444;
+        }
+
+        .led-box {
+            text-align: center;
+            width: auto;
+        }
+
+        .led {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #333;
+            margin: 8px auto;
+            transition: 0.3s;
+            border: 2px solid #000;
+        }
+
+        .led-red.active {
+            background: #ff0000;
+            box-shadow: 0 0 15px #ff0000;
+        }
+
+        .led-blue.active {
+            background: #0088ff;
+            box-shadow: 0 0 15px #0088ff;
+        }
+
+        .led-orange.active {
+            background: #ffaa00;
+            box-shadow: 0 0 15px #ffaa00;
+        }
+
+        .alert-msg {
+            font-size: 0.68em;
+            font-weight: bold;
+            min-height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .camera-box {
+            background: #1e1e1e;
+            border: 1px solid #333;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        #camera-view {
+            width: 100%;
+            max-height: 460px;
+            object-fit: contain;
+            background: #000;
+            border-radius: 10px;
+            border: 1px solid #333;
+        }
+
+        #model-result {
+            color: #00d4ff;
+            font-size: 1.55em;
+        }
+
+        @media (max-width: 1000px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+                width: 96vw;
+            }
+
+            #camera-view {
+                max-height: 320px;
+            }
+        }
+
+        @media (max-width: 650px) {
+            .alarms {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            h1 {
+                font-size: 23px;
+            }
+
+            .control-grid {
+                grid-template-columns: 62px 62px 62px;
+                grid-template-rows: 52px 52px 52px;
+            }
+
+            .control-btn,
+            .empty-cell {
+                width: 62px;
+                height: 52px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Panel de Telemetría + Cámara IA</h1>
+    <div id="status">🔴 Desconectado</div>
+    <div id="control-status">⏸ Control pausado</div>
+    <div id="lane-status">Columna actual: 1</div>
+
+    <div class="control-panel">
+        <div class="control-title">Control del robot</div>
+
+        <div class="mode-buttons">
+            <button id="btn-start" class="mode-btn start-btn">Iniciar / Reanudar</button>
+            <button id="btn-pause" class="mode-btn pause-btn">Pausar</button>
+            <button id="btn-lane" class="mode-btn lane-btn">Cambio de carril</button>
+        </div>
+
+        <div class="control-grid">
+            <div class="empty-cell"></div>
+            <button class="control-btn move-btn disabled" data-command="W">W</button>
+            <div class="empty-cell"></div>
+
+            <button class="control-btn move-btn disabled" data-command="A">A</button>
+            <button class="control-btn stop-btn" data-command="X">X</button>
+            <button class="control-btn move-btn disabled" data-command="D">D</button>
+
+            <div class="empty-cell"></div>
+            <button class="control-btn move-btn disabled" data-command="S">S</button>
+            <div class="empty-cell"></div>
+        </div>
+    </div>
+
+    <div class="main-layout">
+
+        <div class="panel">
+            <div class="section-title">Sensores Ambientales</div>
+
+            <div class="grid">
+                <div class="card">
+                    <div class="label">Temperatura</div>
+                    <div id="temp" class="val">--</div>
+                    <div class="unit">°C</div>
+                </div>
+
+                <div class="card">
+                    <div class="label">Humedad</div>
+                    <div id="hum" class="val">--</div>
+                    <div class="unit">%</div>
+                </div>
+            </div>
+
+            <div class="section-title">Acelerómetro (g) y Orientación</div>
+
+            <div class="grid">
+                <div class="card">
+                    <div class="label">Eje X</div>
+                    <div id="ax" class="val">--</div>
+                </div>
+
+                <div class="card">
+                    <div class="label">Eje Y</div>
+                    <div id="ay" class="val">--</div>
+                </div>
+
+                <div class="card">
+                    <div class="label">Eje Z</div>
+                    <div id="az" class="val">--</div>
+                </div>
+
+                <div class="card">
+                    <div class="label">Ángulo Frontal</div>
+                    <div id="ang-frontal" class="val" style="color: #00d4ff;">--</div>
+                    <div class="unit">grados (°)</div>
+                </div>
+            </div>
+
+            <div class="section-title">Giroscopio (°/s)</div>
+
+            <div class="grid">
+                <div class="card">
+                    <div class="label">Giro X</div>
+                    <div id="gx" class="val">--</div>
+                </div>
+
+                <div class="card">
+                    <div class="label">Giro Y</div>
+                    <div id="gy" class="val">--</div>
+                </div>
+
+                <div class="card">
+                    <div class="label">Giro Z</div>
+                    <div id="gz" class="val">--</div>
+                </div>
+            </div>
+
+            <div class="alarms">
+                <div class="led-box">
+                    <div class="label">Alerta Temp</div>
+                    <div id="led-temp" class="led led-red"></div>
+                    <div id="msg-temp" class="alert-msg"></div>
+                </div>
+
+                <div class="led-box">
+                    <div class="label">Alerta Hum</div>
+                    <div id="led-hum" class="led led-blue"></div>
+                    <div id="msg-hum" class="alert-msg"></div>
+                </div>
+
+                <div class="led-box">
+                    <div class="label">Alerta Giro</div>
+                    <div id="led-giro" class="led led-orange"></div>
+                    <div id="msg-giro" class="alert-msg"></div>
+                </div>
+
+                <div class="led-box">
+                    <div class="label">Alerta Despegue</div>
+                    <div id="led-despegue" class="led led-red"></div>
+                    <div id="msg-despegue" class="alert-msg"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="section-title">Cámara con Modelo IA</div>
+
+            <div class="camera-box">
+                <img id="camera-view" alt="Vista de cámara">
+
+                <div class="label" style="margin-top: 12px;">Resultado del modelo</div>
+                <div id="model-result" class="val">--</div>
+                <div id="model-confidence" class="unit">Confianza: --</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const socket = new WebSocket(`ws://${window.location.hostname}:8767`);
+
+        let controlEnabled = false;
+        let teclaActiva = null;
+        let currentLane = 1;
+
+        // =====================================================
+        // FILTRO DEL ÁNGULO FRONTAL
+        // =====================================================
+        let anguloFrontalFiltrado = null;
+
+        // Menor valor = más suave, mayor valor = responde más rápido.
+        // Recomendado para robot con vibración: 0.08 a 0.15
+        const ANGULO_ALPHA = 0.10;
+
+        // Si el ángulo filtrado queda muy cerca de 0, se muestra como 0.
+        const ANGULO_ZONA_MUERTA = 1.5;
+
+        socket.onopen = () => {
+            document.getElementById('status').innerText = "🟢 Conectado a server.py";
+            document.getElementById('status').style.color = "#00ff00";
+        };
+
+        socket.onclose = () => {
+            document.getElementById('status').innerText = "🔴 Desconectado";
+            document.getElementById('status').style.color = "#ff4444";
+            setControlEnabled(false, false);
+        };
+
+        socket.onerror = () => {
+            document.getElementById('status').innerText = "⚠️ Error WebSocket";
+            document.getElementById('status').style.color = "#ffaa00";
+        };
+
+        socket.onmessage = (event) => {
+            const msg = JSON.parse(event.data);
+
+            if (msg.type === "telemetry") {
+                actualizarTelemetria(msg.data);
+            }
+
+            if (msg.type === "frame") {
+                actualizarCamara(msg);
+            }
+
+            if (msg.type === "control_state_ack") {
+                setControlEnabled(Boolean(msg.active), false);
+            }
+
+            if (msg.type === "lane_state") {
+                actualizarCarril(msg.lane);
+            }
+        };
+
+        function socketReady() {
+            return socket.readyState === WebSocket.OPEN;
+        }
+
+        function setControlEnabled(enabled, sendToServer = true) {
+            controlEnabled = enabled;
+
+            const status = document.getElementById("control-status");
+            const moveButtons = document.querySelectorAll(".move-btn");
+
+            if (controlEnabled) {
+                status.innerText = "▶ Control habilitado";
+                status.style.color = "#00ff66";
+                moveButtons.forEach(btn => btn.classList.remove("disabled"));
+            } else {
+                status.innerText = "⏸ Control pausado";
+                status.style.color = "#ffaa00";
+                moveButtons.forEach(btn => btn.classList.add("disabled"));
+                teclaActiva = null;
+            }
+
+            if (sendToServer && socketReady()) {
+                socket.send(JSON.stringify({
+                    type: "control_state",
+                    active: controlEnabled
+                }));
+            }
+        }
+
+        function actualizarCarril(lane) {
+            currentLane = Number(lane);
+
+            if (!Number.isFinite(currentLane) || currentLane < 1) {
+                currentLane = 1;
+            }
+
+            document.getElementById("lane-status").innerText =
+                "Columna actual: " + currentLane;
+        }
+
+        function solicitarCambioCarril() {
+            if (!socketReady()) {
+                console.log("WebSocket no conectado. No se pudo cambiar carril.");
+                return;
+            }
+
+            socket.send(JSON.stringify({
+                type: "lane_change"
+            }));
+        }
+
+        function enviarComando(comando) {
+            comando = comando.toUpperCase();
+
+            if (!socketReady()) {
+                console.log("WebSocket no conectado. No se envio:", comando);
+                return;
+            }
+
+            if (!controlEnabled && comando !== "X") {
+                console.log("Control pausado. No se envio:", comando);
+                return;
+            }
+
+            socket.send(JSON.stringify({
+                type: "command",
+                command: comando
+            }));
+        }
+
+        function configurarBotonesControl() {
+            const moveButtons = document.querySelectorAll(".move-btn");
+            const stopButton = document.querySelector(".stop-btn");
+
+            document.getElementById("btn-start").addEventListener("click", () => {
+                setControlEnabled(true, true);
+            });
+
+            document.getElementById("btn-pause").addEventListener("click", () => {
+                enviarComando("X");
+                setControlEnabled(false, true);
+            });
+
+            document.getElementById("btn-lane").addEventListener("click", () => {
+                solicitarCambioCarril();
+            });
+
+            moveButtons.forEach((btn) => {
+                const command = btn.dataset.command;
+
+                btn.addEventListener("mousedown", (e) => {
+                    e.preventDefault();
+                    enviarComando(command);
+                });
+
+                btn.addEventListener("mouseup", (e) => {
+                    e.preventDefault();
+                    enviarComando("X");
+                });
+
+                btn.addEventListener("mouseleave", (e) => {
+                    e.preventDefault();
+                    enviarComando("X");
+                });
+
+                btn.addEventListener("touchstart", (e) => {
+                    e.preventDefault();
+                    enviarComando(command);
+                });
+
+                btn.addEventListener("touchend", (e) => {
+                    e.preventDefault();
+                    enviarComando("X");
+                });
+
+                btn.addEventListener("touchcancel", (e) => {
+                    e.preventDefault();
+                    enviarComando("X");
+                });
+            });
+
+            stopButton.addEventListener("click", (e) => {
+                e.preventDefault();
+                enviarComando("X");
+            });
+        }
+
+        const teclasMovimiento = {
+            "w": "W",
+            "a": "A",
+            "s": "S",
+            "d": "D"
+        };
+
+        document.addEventListener("keydown", (e) => {
+            const tecla = e.key.toLowerCase();
+
+            if (teclasMovimiento[tecla]) {
+                if (!controlEnabled) {
+                    return;
+                }
+
+                if (teclaActiva !== tecla) {
+                    teclaActiva = tecla;
+                    enviarComando(teclasMovimiento[tecla]);
+                }
+            }
+
+            if (tecla === "x") {
+                teclaActiva = null;
+                enviarComando("X");
+            }
+        });
+
+        document.addEventListener("keyup", (e) => {
+            const tecla = e.key.toLowerCase();
+
+            if (teclasMovimiento[tecla] && teclaActiva === tecla) {
+                teclaActiva = null;
+                enviarComando("X");
+            }
+        });
+
+        configurarBotonesControl();
+        setControlEnabled(false, false);
+        actualizarCarril(1);
+
+        function mostrarDato(valor) {
+            if (valor === undefined || valor === null || valor === "") {
+                return "--";
+            }
+
+            return valor;
+        }
+
+        function calcularAnguloFrontalFiltrado(axVal, ayVal, azVal) {
+            const anguloCalculado = Math.atan2(
+                -axVal,
+                Math.sqrt(ayVal * ayVal + azVal * azVal)
+            ) * (180 / Math.PI);
+
+            if (!Number.isFinite(anguloCalculado)) {
+                return NaN;
+            }
+
+            if (anguloFrontalFiltrado === null) {
+                anguloFrontalFiltrado = anguloCalculado;
+            } else {
+                anguloFrontalFiltrado =
+                    ANGULO_ALPHA * anguloCalculado +
+                    (1 - ANGULO_ALPHA) * anguloFrontalFiltrado;
+            }
+
+            let anguloMostrado = anguloFrontalFiltrado;
+
+            if (Math.abs(anguloMostrado) < ANGULO_ZONA_MUERTA) {
+                anguloMostrado = 0;
+            }
+
+            return anguloMostrado;
+        }
+
+        function actualizarTelemetria(csvData) {
+            const d = csvData.split(',').map(x => x.trim());
+
+            if (d.length !== 8) {
+                console.log("Telemetría ignorada, cantidad de datos:", d.length, csvData);
+                return;
+            }
+
+            const tVal = parseFloat(d[0]);
+            const hVal = parseFloat(d[1]);
+            const axVal = parseFloat(d[2]);
+            const ayVal = parseFloat(d[3]);
+            const azVal = parseFloat(d[4]);
+            const gxVal = parseFloat(d[5]);
+            const gyVal = parseFloat(d[6]);
+            const gzVal = parseFloat(d[7]);
+
+            const anguloFrontal = calcularAnguloFrontalFiltrado(axVal, ayVal, azVal);
+
+            document.getElementById('temp').innerText = mostrarDato(d[0]);
+            document.getElementById('hum').innerText = mostrarDato(d[1]);
+
+            document.getElementById('ax').innerText = mostrarDato(d[2]);
+            document.getElementById('ay').innerText = mostrarDato(d[3]);
+            document.getElementById('az').innerText = mostrarDato(d[4]);
+
+            document.getElementById('gx').innerText = mostrarDato(d[5]);
+            document.getElementById('gy').innerText = mostrarDato(d[6]);
+            document.getElementById('gz').innerText = mostrarDato(d[7]);
+
+            if (Number.isFinite(anguloFrontal)) {
+                document.getElementById('ang-frontal').innerText = anguloFrontal.toFixed(2);
+            } else {
+                document.getElementById('ang-frontal').innerText = "--";
+            }
+
+            actualizarAlarmas(tVal, hVal, gxVal, gyVal, gzVal, anguloFrontal);
+        }
+
+        function actualizarCamara(msg) {
+            document.getElementById("camera-view").src =
+                "data:image/jpeg;base64," + msg.image;
+
+            document.getElementById("model-result").innerText =
+                msg.class || "--";
+
+            if (msg.confidence !== undefined) {
+                document.getElementById("model-confidence").innerText =
+                    "Confianza: " + (msg.confidence * 100).toFixed(1) + "%";
+            } else {
+                document.getElementById("model-confidence").innerText =
+                    "Confianza: --";
+            }
+        }
+
+        function actualizarAlarmas(tVal, hVal, gxVal, gyVal, gzVal, anguloFrontal) {
+            if (Number.isFinite(tVal) && tVal > 22) {
+                document.getElementById('led-temp').classList.add('active');
+                document.getElementById('msg-temp').innerText = "¡TEMPERATURA CRÍTICA!";
+                document.getElementById('msg-temp').style.color = "#ff4444";
+            } else {
+                document.getElementById('led-temp').classList.remove('active');
+                document.getElementById('msg-temp').innerText = "";
+            }
+
+            if (Number.isFinite(hVal) && hVal > 60) {
+                document.getElementById('led-hum').classList.add('active');
+                document.getElementById('msg-hum').innerText = "MUCHA HUMEDAD";
+                document.getElementById('msg-hum').style.color = "#44aaff";
+            } else {
+                document.getElementById('led-hum').classList.remove('active');
+                document.getElementById('msg-hum').innerText = "";
+            }
+
+            if (
+                Number.isFinite(gxVal) &&
+                Number.isFinite(gyVal) &&
+                Number.isFinite(gzVal) &&
+                (Math.abs(gxVal) > 100 || Math.abs(gyVal) > 100 || Math.abs(gzVal) > 100)
+            ) {
+                document.getElementById('led-giro').classList.remove('active');
+                document.getElementById('msg-giro').innerText = "";
+                document.getElementById('msg-giro').style.color = "#ffaa00";
+            } else {
+                document.getElementById('led-giro').classList.remove('active');
+                document.getElementById('msg-giro').innerText = "";
+            }
+
+            if (Number.isFinite(anguloFrontal) && anguloFrontal < 0) {
+                document.getElementById('led-despegue').classList.add('active');
+                document.getElementById('msg-despegue').innerText = "ROBOT DESPEGÁNDOSE";
+                document.getElementById('msg-despegue').style.color = "#ff4444";
+            } else {
+                document.getElementById('led-despegue').classList.remove('active');
+                document.getElementById('msg-despegue').innerText = "";
+            }
+        }
+    </script>
+</body>
+
+</html>

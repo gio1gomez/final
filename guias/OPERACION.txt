@@ -1,0 +1,88 @@
+GUÍA DE OPERACIÓN
+Sistema Robótico Ícaro
+
+Esta guía describe el procedimiento básico para ejecutar una prueba del prototipo del sistema robótico Ícaro.
+
+1. PREPARACIÓN ANTES DE LA PRUEBA
+
+Antes de iniciar la operación, verificar:
+
+- Que el prototipo esté correctamente armado.
+- Que la Raspberry Pi Zero esté encendida.
+- Que las Raspberry Pi Pico estén alimentadas.
+- Que la cámara CSI esté conectada.
+- Que la laptop y la Raspberry Pi Zero estén en la misma red local.
+- Que MongoDB esté activo en la laptop.
+- Que el modelo ModeloV3.tflite se encuentre en la carpeta del servidor.
+
+2. INICIO DEL SERVIDOR
+
+En la laptop, abrir una terminal en la carpeta del proyecto y ejecutar:
+
+python3 server2.py
+
+El servidor se encarga de recibir datos desde la Raspberry Pi Zero, procesar imágenes con el modelo de inteligencia artificial, enviar información a la interfaz web y guardar detecciones en MongoDB.
+
+3. INICIO DE LA RASPBERRY PI ZERO
+
+En la Raspberry Pi Zero, ejecutar:
+
+python3 final7.py
+
+Este archivo permite capturar imágenes desde la cámara CSI, recibir telemetría por UART y enviar los datos al servidor mediante WebSocket.
+
+4. INICIO DE LA INTERFAZ WEB
+
+Abrir el archivo index.html desde el navegador de la laptop.
+
+En la interfaz se puede visualizar:
+
+- Estado de conexión con la Raspberry Pi Zero.
+- Temperatura.
+- Humedad.
+- Acelerómetro.
+- Ángulo frontal.
+- Giroscopio.
+- Alertas del sistema.
+
+5. CONTROL DEL ROBOT
+
+Los comandos principales de movimiento son:
+
+- W: avanzar.
+- S: retroceder.
+- A: giro hacia la izquierda.
+- D: giro hacia la derecha.
+- X: detener.
+
+Antes de mover el robot, se debe verificar que el sistema esté conectado y que no existan alertas críticas.
+
+6. DETECCIÓN DE GRIETAS
+
+Durante la operación, el sistema recibe imágenes desde la cámara y las procesa con el modelo ModeloV3.tflite.
+
+Cuando se detecta una grieta, el sistema puede registrar:
+
+- Fecha y hora de detección.
+- Datos de telemetría.
+- Confianza del modelo.
+- Imagen asociada.
+- Carril o columna de inspección.
+
+7. GENERACIÓN DEL INFORME DE MISIÓN
+
+Al finalizar la prueba, ejecutar:
+
+python3 generar_informe_mision.py
+
+El informe se genera en la carpeta informes_misiones.
+
+8. CIERRE DEL SISTEMA
+
+Al terminar la operación:
+
+1. Detener el movimiento del robot.
+2. Cerrar la interfaz web.
+3. Finalizar los procesos de Python.
+4. Apagar la Raspberry Pi Zero de forma segura.
+5. Desconectar la alimentación del prototipo.

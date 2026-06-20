@@ -1,0 +1,67 @@
+GUÍA DE MANTENIMIENTO
+Sistema Robótico Ícaro
+
+Esta guía resume las tareas básicas de mantenimiento preventivo del prototipo del sistema robótico Ícaro.
+
+1. MANTENIMIENTO ANTES DE CADA PRUEBA
+
+Antes de iniciar una misión, revisar:
+
+- Estado físico del chasis.
+- Fijación de motores y ruedas.
+- Conexión de la cámara CSI.
+- Conexión de la Raspberry Pi Zero.
+- Conexión de la Raspberry Pi Pico 1 y Pico 2.
+- Estado de cables de alimentación y señal.
+- Conexiones UART entre los módulos.
+- Estado del ESC y motor brushless.
+- Estado de sensores ambientales e inerciales.
+- Correcto encendido de la laptop y red local.
+
+2. REVISIÓN DE SOFTWARE
+
+Antes de ejecutar el sistema, verificar:
+
+- Que server2.py esté en la laptop.
+- Que final7.py esté en la Raspberry Pi Zero.
+- Que pico1final2.py esté cargado en la Pico 1.
+- Que pico2final2.py esté cargado en la Pico 2.
+- Que ModeloV3.tflite esté en la carpeta del servidor.
+- Que MongoDB esté activo.
+- Que la carpeta del proyecto no tenga archivos faltantes.
+
+3. MANTENIMIENTO DESPUÉS DE CADA PRUEBA
+
+Después de cada misión, realizar:
+
+- Apagar el sistema de forma segura.
+- Revisar si existen cables sueltos.
+- Revisar si algún componente presenta calentamiento excesivo.
+- Limpiar la cámara CSI.
+- Retirar polvo o residuos del chasis.
+- Guardar las imágenes de evidencia.
+- Guardar los informes generados.
+- Revisar la carpeta evidence.
+- Revisar la carpeta informes_misiones.
+
+4. MANTENIMIENTO DEL REPOSITORIO
+
+Para conservar la trazabilidad del proyecto:
+
+- Mantener actualizado el repositorio GitHub.
+- No eliminar archivos principales del sistema.
+- Registrar cambios importantes mediante commits.
+- Mantener una copia del modelo ModeloV3.tflite.
+- Documentar cualquier modificación realizada al código.
+
+5. RECOMENDACIONES DE SEGURIDAD
+
+- No manipular el ESC mientras el sistema esté alimentado.
+- No acercar las manos a la hélice o turbina durante pruebas.
+- Verificar la polaridad antes de conectar alimentación.
+- Detener el robot ante cualquier comportamiento inesperado.
+- Realizar pruebas en condiciones controladas.
+
+6. OBSERVACIÓN SOBRE ADHERENCIA
+
+La adherencia vertical se valida mediante simulación. En el prototipo físico se verifica principalmente el armado del ESC, el control progresivo del motor brushless y la integración del subsistema con la electrónica del robot.
